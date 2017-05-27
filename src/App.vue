@@ -41,7 +41,6 @@ export default {
           console.error(error)
         })
     },
-
     saveAppdata() {
       var ElemeData = AV.Object.extend('ElemeData')
       var eleme = new ElemeData()
