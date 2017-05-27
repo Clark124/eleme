@@ -1,14 +1,14 @@
 <template>
     <div class="cartcontrol">
         <transition enter-active-class="animated lightSpeedIn" leave-active-class="animated lightSpeedOut" >
-        <div class="cart-decrease" v-show="food.count>0" @click="decreaseCart($event)" transition="move">
+        <div class="cart-decrease" v-show="food.count>0" @click.stop="decreaseCart($event)" transition="move">
              <svg class="icon" aria-hidden="true">
                 <use xlink:href="#icon-remove_circle_outlin"></use>
             </svg>
         </div>
         </transition>
         <div class="cart-count" v-show="food.count>0">{{food.count}}</div>
-        <div class="cart-add" @click="addCart($event)">
+        <div class="cart-add" @click.stop="addCart($event)">
             <svg class="icon" aria-hidden="true">
                 <use xlink:href="#icon-add_circle"></use>
             </svg>
@@ -22,7 +22,6 @@ export default {
     props: {
         food: {
             type: Object,
-
         }
     },
     methods: {
@@ -65,14 +64,13 @@ export default {
         display: inline-block;
         vertical-align: top;
         width: 14px;
-
         padding-top: 6px;
         line-height: 20px;
         text-align: center;
         font-size: 10px;
         color: rgb(147, 153, 159);
     }
-    .cart-add {}
+   
 }
 </style>
 

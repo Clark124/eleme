@@ -1,35 +1,63 @@
 <template>
-    <div class="shopcart">
-        <div class="content">
-            <div class="content-left">
-                <div class="logo-wrapper">
-                    <div class="logo" :class="{'highlight':totalCount>0}">
-                        <i class="iconfont icon-shopping_cart" :class="{'highlight':totalCount>0}"></i>
+    <div>
+        <div class="shopcart">
+            <div class="content" @click="toggleList">
+                <div class="content-left">
+                    <div class="logo-wrapper">
+                        <div class="logo" :class="{'highlight':totalCount>0}">
+                            <i class="iconfont icon-shopping_cart" :class="{'highlight':totalCount>0}"></i>
+                        </div>
+                        <div class="num" v-show="totalCount>0">{{totalCount}}</div>
                     </div>
-                    <div class="num" v-show="totalCount>0">{{totalCount}}</div>
+                    <div class="price" :class="{'highlight':totalPrice>0}">￥{{totalPrice}}元</div>
+                    <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
                 </div>
-                <div class="price" :class="{'highlight':totalPrice>0}">￥{{totalPrice}}元</div>
-                <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
-            </div>
-            <div class="content-right">
-                <div class="pay" :class="payClass">
-                    {{payDesc}}
-                </div>
-            </div>
-        </div>
-        <div class="ball-container">
-            <div v-for="ball in balls">
-                <transition name="drop" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:after-enter="afterEnter">
-                    <div v-show="ball.show" class="ball">
-                        <div class="inner inner-hook" ref="innerHook"></div>
+                <div class="content-right">
+                    <div class="pay" :class="payClass" @click.stop.prevent="pay">
+                        {{payDesc}}
                     </div>
-                </transition>
+                </div>
             </div>
+            <div class="ball-container">
+                <div v-for="ball in balls">
+                    <transition name="drop" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:after-enter="afterEnter">
+                        <div v-show="ball.show" class="ball">
+                            <div class="inner inner-hook" ref="innerHook"></div>
+                        </div>
+                    </transition>
+                </div>
+            </div>
+            <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+                <div class="shopcart-list" v-show="listShow">
+                    <div class="list-header">
+                        <h1 class="title">购物车</h1>
+                        <span class="empty" @click="empty">清空</span>
+                    </div>
+                    <div class="list-content" ref="listContent">
+                        <ul>
+                            <li class="food" v-for="food in selectFoods">
+                                <span class="name">{{food.name}}</span>
+                                <div class="price">
+                                    <span>￥{{food.price*food.count}}</span>
+                                </div>
+                                <div class="cartcontrol-wrapper">
+                                    <CartControl :food="food" @cartAdd="drop"></CartControl>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </transition>
         </div>
+        <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+            <div class="list-mask" v-show="listShow" @click="hideList"></div>
+        </transition>
     </div>
 </template>
 
 <script>
+import BScroll from 'better-scroll'
+import CartControl from '../cartcontrol/CarControl'
 export default {
     name: 'Shopcart',
     props: {
@@ -56,10 +84,31 @@ export default {
     data() {
         return {
             balls: [{ show: false }, { show: false }, { show: false }, { show: false }, { show: false }],
-            dropBalls: []
+            dropBalls: [],
+            fold: true
         }
     },
     computed: {
+        listShow() {
+            if (!this.totalCount) {
+                this.fold = true;
+                return false;
+            }
+            let show = !this.fold;
+            if (show) {
+                this.$nextTick(() => {
+                    if (!this.scroll) {
+                        this.scroll = new BScroll(this.$refs.listContent, {
+                            click: true
+                        })
+                    } else {
+                        this.scroll.refresh();
+                    }
+
+                })
+            }
+            return show;
+        },
         totalPrice() {
             let total = 0;
             this.selectFoods.forEach((food) => {
@@ -93,6 +142,26 @@ export default {
         }
     },
     methods: {
+        pay(){
+            if(this.totalPrice<this.minPrice){
+                return;
+            }
+            alert('支付'+this.totalPrice+'元')
+        },
+        hideList(){
+            this.fold = true
+        },
+        empty() {
+            this.selectFoods.forEach((food) => {
+                food.count = 0;
+            })
+        },
+        toggleList() {
+            if (!this.totalCount) {
+                return;
+            }
+            this.fold = !this.fold
+        },
         drop(el) {
             for (let i = 0; i < this.balls.length; i++) {
                 let ball = this.balls[i];
@@ -139,11 +208,15 @@ export default {
                 el.style.display = 'none'
             }
         }
+    },
+    components: {
+        CartControl
     }
 }
 </script>
 
 <style lang="scss" scoped>
+@import '../../common/css/mixin.scss';
 .shopcart {
     position: fixed;
     left: 0;
@@ -255,7 +328,7 @@ export default {
             left: 32px;
             bottom: 22px;
             z-index: 200;
-            transition: all 1s cubic-bezier(0.49, -0.29, 0.75, 0.41);
+            transition: all 0.6s cubic-bezier(0.49, -0.29, 0.75, 0.41);
             .inner {
                 width: 16px;
                 height: 16px;
@@ -265,5 +338,72 @@ export default {
             }
         }
     }
+    .shopcart-list {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+        width: 100%;
+        transform: translate3d(0, -100%, 0);
+        .list-header {
+            height: 40px;
+            line-height: 40px;
+            padding: 0 18px;
+            background: #f3f5f7;
+            border-bottom: 1px solid rgba(7, 17, 27, 0.1);
+            .title {
+                float: left;
+                font-size: 14px;
+                column-rule: rgb(7, 17, 27);
+            }
+            .empty {
+                float: right;
+                font-size: 12px;
+                color: rgb(7, 17, 27)
+            }
+        }
+        .list-content {
+            padding: 0 18px;
+            max-height: 217px;
+            background: #fff;
+            overflow: hidden;
+            .food {
+                position: relative;
+                padding: 12px 0;
+                box-sizing: border-box;
+                @include border-1px(rgba(7, 17, 27, 0.1));
+                .name {
+                    line-height: 24px;
+                    font-size: 14px;
+                    color: rgb(7, 17, 27);
+                }
+                .price {
+                    position: absolute;
+                    right: 90px;
+                    bottom: 10px;
+                    line-height: 24px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: rgb(240, 20, 20);
+                }
+                .cartcontrol-wrapper {
+                    position: absolute;
+                    right: 0;
+                    bottom: 6px;
+                }
+            }
+        }
+    }
+}
+
+.list-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 40;
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(7, 17, 27, 0.6)
 }
 </style>
