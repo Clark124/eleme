@@ -29,7 +29,8 @@ export default {
     }
   },
   created() {
-    this.fetchSeller()
+    this.fetchSeller();
+    
   },
   methods: {
     fetchSeller() {

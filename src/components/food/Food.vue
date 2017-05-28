@@ -33,6 +33,7 @@
                 <Split></Split>
                 <div class="rating">
                     <h1 class="title">商品评价</h1>
+                    <Ratingselect :selectType="selectTypes" :onlyContent="onlyContents" :desc="desc" :ratings="food.ratings"></Ratingselect>
                 </div>
             </div>
         </div>
@@ -43,6 +44,12 @@ import BScroll from 'better-scroll'
 import CartControl from '../cartcontrol/CarControl'
 import Split from '../split/Split'
 import Vue from 'vue'
+import Ratingselect from '../ratingselect/Ratingselect'
+
+
+const POSITIVE = 0
+const NEGATIVE = 1
+const ALL = 2;
 export default {
 
     name: 'Food',
@@ -53,7 +60,14 @@ export default {
     },
     data() {
         return {
-            showFlag: false
+            showFlag: false,
+            selectTypes:{selecttypes:ALL},
+            onlyContents:{onlycontent:false},
+            desc:{
+                all:'全部',
+                positive:'推荐',
+                negative:'吐槽'
+            }
         }
     },
     methods: {
@@ -70,6 +84,9 @@ export default {
         },
         show() {
             this.showFlag = true
+            this.selectType = ALL
+            this.onlyContent = true
+
             this.$nextTick(() => {
                 if (!this.scroll) {
                     this.scroll = new BScroll(this.$refs.food, {
@@ -89,7 +106,7 @@ export default {
 
     },
     components: {
-        CartControl, Split
+        CartControl, Split, Ratingselect
     }
 }
 </script>
@@ -192,6 +209,16 @@ export default {
             color: rgb(77,85,93)
         }
 
+    }
+    .rating{
+        padding-top: 18px;
+        .title{
+            line-height: 14px;
+            margin-left: 16px;
+            font-size: 14px;
+            color: rgb(7,17,27);
+        }
+        
     }
 }
 </style>
