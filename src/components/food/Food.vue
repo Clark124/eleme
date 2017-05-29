@@ -1,6 +1,6 @@
 <template>
-    <transition enter-active-class="animated fadeInRight" leave-active-class="animated fadeOutLeft">
-        <div v-show="showFlag" class="food" ref="food">
+    <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
+        <div v-show="showFlag" class="food" ref="food" @click="doRefresh">
             <div class="food-content">
                 <div class="img-header">
                     <img :src="food.image" alt="">
@@ -33,7 +33,34 @@
                 <Split></Split>
                 <div class="rating">
                     <h1 class="title">商品评价</h1>
-                    <Ratingselect :selectType="selectTypes" :onlyContent="onlyContents" :desc="desc" :ratings="food.ratings"></Ratingselect>
+                    <Ratingselect ref="ratingselect" @refresh="doRefresh" :selectType="selectTypes" :onlyContent="onlyContents" :desc="desc" :ratings="food.ratings"></Ratingselect>
+                    <div class="rating-wrapper">
+                        <ul v-show="food.ratings && food.ratings.length">
+                            <li v-show="needshow(rating.rateType,rating.text)" v-for="rating in food.ratings" class="rating-item border-1px">
+                                <div class="user">
+                                    <span class="name">{{rating.username}}</span>
+                                    <img :src="rating.avatar" class="avatar" width="12" height="12" alt="">
+                                </div>
+                                <div class="time">{{rating.rateTime | formatDate}}</div>
+                                <p class="text">
+                                    <span class="up" v-if="rating.rateType===0">
+                                        <svg class="icon" aria-hidden="true">
+                                            <use xlink:href="#icon-thumb_up"></use>
+                                        </svg>
+                                    </span>
+                                    <span class="down" v-else-if="rating.rateType===1">
+                                        <svg class="icon" aria-hidden="true">
+                                            <use xlink:href="#icon-thumb_down"></use>
+                                        </svg>
+                                    </span>
+                                    {{rating.text}}
+                                </p>
+                            </li>
+                        </ul>
+                        <div class="no-rating" v-show="!food.ratings || !food.ratings.length">
+                            暂无评价
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -45,6 +72,7 @@ import CartControl from '../cartcontrol/CarControl'
 import Split from '../split/Split'
 import Vue from 'vue'
 import Ratingselect from '../ratingselect/Ratingselect'
+import { format } from 'silly-datetime';
 
 
 const POSITIVE = 0
@@ -61,16 +89,32 @@ export default {
     data() {
         return {
             showFlag: false,
-            selectTypes:{selecttypes:ALL},
-            onlyContents:{onlycontent:false},
-            desc:{
-                all:'全部',
-                positive:'推荐',
-                negative:'吐槽'
+            selectTypes: { selecttypes: ALL },
+            onlyContents: { onlycontent: true },
+            desc: {
+                all: '全部',
+                positive: '推荐',
+                negative: '吐槽'
             }
         }
     },
     methods: {
+        doRefresh() {
+            this.$nextTick(() => {
+                this.scroll.refresh()
+            })
+
+        },
+        needshow(type, text) {
+            if (this.onlyContents.onlycontent && !text) {
+                return false
+            }
+            if (this.selectTypes.selecttypes === ALL) {
+                return true;
+            } else {
+                return type === this.selectTypes.selecttypes
+            }
+        },
         drop() {
             this.$emit('cartAdd', event.target)
         },
@@ -84,23 +128,30 @@ export default {
         },
         show() {
             this.showFlag = true
-            this.selectType = ALL
-            this.onlyContent = true
+            // this.selectTypes.selecttypes = ALL
+            // this.onlyContents.onlycontent = true
 
             this.$nextTick(() => {
                 if (!this.scroll) {
                     this.scroll = new BScroll(this.$refs.food, {
                         click: true
                     })
+                    this.doRefresh()
                 } else {
                     this.scroll.refresh()
                 }
             })
+
+
         },
         hide() {
             this.showFlag = false;
         }
-
+    },
+    filters: {
+        formatDate(time) {
+            return format(time, 'YYYY-MM-DD HH:mm')
+        }
     },
     computed: {
 
@@ -111,6 +162,7 @@ export default {
 }
 </script>
 <style scoped lang="scss">
+@import '../../common/css/mixin.scss';
 .food {
     position: fixed;
     left: 0;
@@ -194,31 +246,82 @@ export default {
             background: rgb(0, 160, 220);
         }
     }
-    .info{
+    .info {
         padding: 18px;
-        .title{
+        .title {
             line-height: 14px;
             margin-bottom: 16px;
             font-size: 14px;
-            color: rgb(7,17,27);
+            color: rgb(7, 17, 27);
         }
-        .text{
+        .text {
             line-height: 24px;
             padding: 0 8px;
             font-size: 12px;
-            color: rgb(77,85,93)
+            color: rgb(77, 85, 93)
         }
-
     }
-    .rating{
+    .rating {
         padding-top: 18px;
-        .title{
+        .title {
             line-height: 14px;
             margin-left: 16px;
             font-size: 14px;
-            color: rgb(7,17,27);
+            color: rgb(7, 17, 27);
         }
-        
+        .rating-wrapper {
+            padding: 0 18px;
+            .rating-item {
+                position: relative;
+                padding: 16px 0;
+                @include border-1px(rgba(7, 17, 27, 0.1));
+                .user {
+                    position: absolute;
+                    right: 0;
+                    top: 16px;
+                    font-size: 0;
+                    line-height: 12px;
+                    .name {
+                        display: inline-block;
+                        vertical-align: top;
+                        font-size: 10px;
+                        color: rgb(147, 153, 159);
+                        margin-right: 6px;
+                    }
+                    .avatar {
+                        border-radius: 50%;
+                    }
+                }
+                .time {
+                    margin-bottom: 6px;
+                    line-height: 12px;
+                    font-size: 10px;
+                    color: rgb(147, 153, 159);
+                }
+                .text {
+                    line-height: 16px;
+                    font-size: 12px;
+                    color: rgb(7, 17, 27);
+                    .up,
+                    .down {
+                        margin-right: 4px;
+                        line-height: 16px;
+                        font-size: 12px;
+                    }
+                    .up {
+                        color: rgb(0, 160, 220);
+                    }
+                    .down {
+                        color: rgb(147, 153, 159);
+                    }
+                }
+            }
+            .no-rating {
+                padding: 16px 0;
+                font-size: 12px;
+                color: rgb(147, 153, 159);
+            }
+        }
     }
 }
 </style>

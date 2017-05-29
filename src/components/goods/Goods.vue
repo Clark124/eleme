@@ -41,7 +41,7 @@
       </div>
       <Shopcart ref="shopcart" :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice" :selectFoods="selectFoods"></Shopcart>
     </div>
-    <Food :food="selectedFood" ref="food" @cartAdd="_drop"></Food>
+    <Food :food="selectedFood" ref="foods" @cartAdd="_drop"></Food>
   </div>
 </template>
 <script>
@@ -109,7 +109,11 @@ export default {
         return
       }
       this.selectedFood = food
-      this.$refs.food.show()
+      this.$refs.foods.show()
+      this.$nextTick(()=>{
+         this.$refs.foods.doRefresh()
+      })
+     
 
     },
     selectMenu(index, event) {

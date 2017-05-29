@@ -3,13 +3,13 @@
         <div class="ratingselect">
             <div class="rating-type border-1px">
                 <span @click="select(2,$event)" class="block positive" :class="{'active':selectType.selecttypes===2}">{{desc.all}}
-                    <span class="count">47</span>
+                    <span class="count">{{ratings.length}}</span>
                 </span>
                 <span @click="select(0,$event)" class="block positive" :class="{'active':selectType.selecttypes===0}">{{desc.positive}}
-                    <span class="count">40</span>
+                    <span class="count">{{positives.length}}</span>
                 </span>
                 <span @click="select(1,$event)" class="block negative" :class="{'active':selectType.selecttypes===1}">{{desc.negative}}
-                    <span class="count">40</span>
+                    <span class="count">{{negetives.length}}</span>
                 </span>
             </div>
             <div class="switch" @click="toggleContent($event)">
@@ -67,21 +67,32 @@ export default {
     //         selectTypes:''
     //     }
     // },
-    // mounted(){
-    //     this.selectTypes = this.selectType
-    // },
+    computed:{
+       positives(){
+           return this.ratings.filter((rating)=>{
+               return rating.rateType === POSITIVE
+           }) 
+       },
+       negetives(){
+           return this.ratings.filter((rating)=>{
+               return rating.rateType === NEGATIVE
+           }) 
+       }
+    },
     methods: {
         select(type, event) {
             if (!event._constructed) {
                 return
             }
-            this.selectType.selecttypes = type
+            this.selectType.selecttypes = type;
+            this.$emit('refresh')
         },
         toggleContent(event) {
             if (!event._constructed) {
                 return
             }
             this.onlyContent.onlycontent = !this.onlyContent.onlycontent
+            this.$emit('refresh')
         }
     }
 }
@@ -93,7 +104,7 @@ export default {
     .rating-type {
         padding: 18px 0;
         margin: 0 18px;
-        @include border-1px(rbga(7, 17, 27, 0.1));
+        @include border-1px(rgba(7, 17, 27, 0.1));
         font-size: 0;
         .block {
             display: inline-block;
