@@ -2,8 +2,9 @@
   <div id="app">
     <v-Header :seller="seller"></v-Header>
     <Tab></Tab>
-    <router-view :seller="seller"></router-view>
-  
+    <keep-alive>
+      <router-view :seller="seller"></router-view>
+    </keep-alive>
   </div>
 </template>
 
@@ -12,6 +13,7 @@ import Header from './components/header/Header'
 import Tab from './components/tab/Tab'
 
 import AV from './lib/leancloud.js'
+import { urlParse } from './common/js/until.js'
 
 var appDate = require('../data.json')
 var sellerData = appDate.seller
@@ -24,12 +26,19 @@ export default {
   name: 'app',
   data() {
     return {
-      seller: {},
-      list: ['1', '2', '3']
+      seller: {
+        id: (() => {
+          let queryParam = urlParse();
+          return  queryParam.id ;
+        })()
+      },
     }
   },
   created() {
     this.fetchSeller();
+
+  },
+  computed: {
     
   },
   methods: {
@@ -37,7 +46,8 @@ export default {
       var query = new AV.Query('ElemeData');
       query.find()
         .then((res) => {
-          this.seller = res[0].attributes.seller
+          // this.seller = res[0].attributes.seller
+          this.seller = Object.assign({}, this.seller, res[0].attributes.seller)
         }, function (error) {
           console.error(error)
         })

@@ -46,7 +46,7 @@
                         </div>
                         <ul v-if="seller.supports" class="supports">
                             <li class="support-item" v-for="(item,i) in seller.supports">
-                                <span class="icon" :class="classMap[item.type]"></span>
+                                <span class="icons" :class="classMap[item.type]"></span>
                                 <span class="text">{{item.description}}</span>
                             </li>
                         </ul>
@@ -287,7 +287,7 @@ export default {
                         &:last-child {
                             margin-bottom: 0;
                         }
-                        .icon {
+                        .icons {
                             display: inline-block;
                             vertical-align: top;
                             width: 16px;
